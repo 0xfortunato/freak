@@ -1,0 +1,3 @@
+[] - add CI pipeline - high priority
+[] - add gorm 
+[] - setup docker-compose
