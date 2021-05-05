@@ -5,7 +5,7 @@ YESS
 - [echo](https://github.com/labstack/echo) for routing <br>
 - [checkmail](https://github.com/badoux/checkmail)
  for email validation <br>
-- [gorm](https://github.com/go-gorm/gorm) for database management
+- [gorm](https://github.com/go-gorm/gorm) for database manipulation
 
 
 ## License
