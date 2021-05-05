@@ -21,10 +21,10 @@ jobs:
     - name: Install dependencies
       run: go get -v -t -d ./...
 
-    - name: Run vet & lint
-      run: |
-        go vet .
-        golint .
+#    - name: Run vet & lint
+#      run: |
+#       go vet .
+#        golint .
         
     - name: Run build
       run: go build -v .
