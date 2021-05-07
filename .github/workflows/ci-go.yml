@@ -25,9 +25,11 @@ jobs:
 #      run: |
 #       go vet .
 #        golint .
+
+#    - name: Run testing
+#      run: cd tests && go test -v
         
     - name: Run build
       run: go build -v .
         
-    - name: Run testing
-      run: cd tests && go test -v
+
