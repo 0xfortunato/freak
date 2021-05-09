@@ -1,8 +1,11 @@
 package auth
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,9 +23,24 @@ func CreateToken(user_id uint32) (string, error) {
 	return token.SignedString([]byte(os.Getenv("API_SECRET")))
 }
 
-func TokenValid(r *http.Request) (error, string) {
+func TokenValid(r *http.Request) error {
 	tokenString := ExtractToken(r)
-	return nil, tokenString
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("API_SECRET")), nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		Pretty(claims)
+	}
+
+	return nil
 }
 
 func ExtractToken(r *http.Request) string {
@@ -37,4 +55,41 @@ func ExtractToken(r *http.Request) string {
 	}
 
 	return ""
+}
+
+func ExtractTokenID(r *http.Request) (uint32, error) {
+	tokenString := ExtractToken(r)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("API_SECRET")), nil
+	})
+
+	if err != nil {
+		return 0, nil
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	// checks if the token is valid
+	if ok && token.Valid {
+		uid, err := strconv.ParseUint(fmt.Sprintf("%0.f", claims["user_id"]), 10, 32)
+		if err != nil {
+			return 0, err
+		}
+
+		return uint32(uid), nil
+	}
+
+	return 0, nil
+}
+
+// pretty display the claims licely in the terminal
+func Pretty(data interface{}) {
+	b, err := json.MarshalIndent(data, "", " ")
+	if err != nil {
+		return
+	}
+
+	fmt.Println(string(b))
 }
