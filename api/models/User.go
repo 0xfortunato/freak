@@ -114,7 +114,7 @@ func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 	return &users, err
 }
 
-func (u *User) FindUserByID(db *gorm.DB, uid int32) (*User, error) {
+func (u *User) FindUserByID(db *gorm.DB, uid uint32) (*User, error) {
 	var err error
 	err = db.Debug().Model(&User{}).Where("id = ?", uid).Take(&u).Error
 	if err != nil {
@@ -128,7 +128,7 @@ func (u *User) FindUserByID(db *gorm.DB, uid int32) (*User, error) {
 	return u, err
 }
 
-func (u *User) UpdateAUser(db *gorm.DB, uid int32) (*User, error) {
+func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (*User, error) {
 
 	// hash user password
 	err := u.BeforeSave()
@@ -158,7 +158,7 @@ func (u *User) UpdateAUser(db *gorm.DB, uid int32) (*User, error) {
 	return u, nil
 }
 
-func (u *User) DeleteAUser(db *gorm.DB, uid int32) (int64, error) {
+func (u *User) DeleteAUser(db *gorm.DB, uid uint32) (int64, error) {
 
 	// find user by id and delete the record
 	db = db.Debug().Model(&User{}).Where("id = ?", uid).Take(
