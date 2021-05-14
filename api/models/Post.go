@@ -42,7 +42,7 @@ func (p *Post) Validate() error {
 	return nil
 }
 
-func (p *Post) SavePost(db *gorm.DB, uid int32) (*Post, error) {
+func (p *Post) SavePost(db *gorm.DB) (*Post, error) {
 	var err error
 	err = db.Debug().Model(&Post{}).Create(&p).Error
 	if err != nil {
@@ -89,7 +89,7 @@ func (p *Post) FindPostByID(db *gorm.DB, pid uint64) (*Post, error) {
 	return p, nil
 }
 
-func (p *Post) UpdatePost(db *gorm.DB) (*Post, error) {
+func (p *Post) UpdateAPost(db *gorm.DB) (*Post, error) {
 	var err error
 	err = db.Debug().Model(&Post{}).Where("id = ?", p.ID).Updates(
 		Post{Title: p.Title, Content: p.Content, UpdatedAt: time.Now()}).Error
