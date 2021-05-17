@@ -112,7 +112,7 @@ func (server *Server) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ui != post.AuthorID {
+	if uid != post.AuthorID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("unauthorized"))
 		return
 	}
