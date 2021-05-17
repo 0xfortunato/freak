@@ -2,7 +2,7 @@ package controllers
 
 import "github.com/0xfortunato/freak/api/middlewares"
 
-func (s *Server) initalizeRoutes() {
+func (s *Server) initializeRoutes() {
 
 	// home route
 	s.Router.HandleFunc("/", middlewares.SetMiddlewareJSON(s.Home)).Methods("GET")
