@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAllUsers(t *testing.T) {
+func TestFindAllUsers(t *testing.T) {
 
 	err := refreshUserTable()
 	if err != nil {
@@ -115,7 +115,7 @@ func TestDeleteAUser(t *testing.T) {
 		log.Fatalf("cannot seed user: %v\n", err)
 	}
 
-	isDeleted, err := user.DeleteAUser(server.DB, user.ID)
+	isDeleted, err := userInstance.DeleteAUser(server.DB, user.ID)
 	if err != nil {
 		t.Errorf("this is the error deleting the user: %v\n", err)
 		return

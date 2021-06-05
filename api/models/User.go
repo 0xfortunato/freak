@@ -139,10 +139,10 @@ func (u *User) UpdateAUser(db *gorm.DB, uid uint32) (*User, error) {
 	// finds user by id, and update the corresponding
 	// entity fields
 	db = db.Debug().Model(&User{}).Where("id = ? ", uid).Take(&User{}).UpdateColumns(map[string]interface{}{
-		"password":  u.Password,
-		"nickname":  u.Nickname,
-		"email":     u.Email,
-		"update_at": time.Now(),
+		"password":   u.Password,
+		"nickname":   u.Nickname,
+		"email":      u.Email,
+		"updated_at": time.Now(),
 	},
 	)
 
