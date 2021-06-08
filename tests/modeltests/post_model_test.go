@@ -74,7 +74,7 @@ func TestGetPostByID(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, foundPost.ID, post.ID)
+	assert.Equal(t, post.ID, foundPost.ID)
 	assert.Equal(t, foundPost.Title, post.Title)
 	assert.Equal(t, foundPost.Content, post.Content)
 }
@@ -101,6 +101,7 @@ func TestUpdateAPost(t *testing.T) {
 		t.Errorf("this is the error updating the user: %v\n", err)
 		return
 	}
+
 	assert.Equal(t, updatedPost.ID, postUpdate.ID)
 	assert.Equal(t, updatedPost.Title, postUpdate.Title)
 	assert.Equal(t, updatedPost.Content, postUpdate.Content)

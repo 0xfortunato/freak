@@ -45,10 +45,14 @@ func Database() {
 }
 
 func refreshUserTable() error {
+	server.DB.Exec("SET foreign_key_checks=0")
+
 	err := server.DB.DropTableIfExists(&models.User{}).Error
 	if err != nil {
 		return err
 	}
+
+	server.DB.Exec("SET foreign_key_checks=1")
 	err = server.DB.AutoMigrate(&models.User{}).Error
 	if err != nil {
 		return err
@@ -118,24 +122,29 @@ func seedOneUserAndOnePost() (models.Post, error) {
 	if err != nil {
 		return models.Post{}, err
 	}
+
 	user := models.User{
-		Nickname: "Sam Phil",
-		Email:    "sam@gmail.com",
-		Password: "password",
+		Nickname: "someNickname",
+		Email:    "someEmail@gmail.com",
+		Password: "somePasswd",
 	}
-	err = server.DB.Model(&models.User{}).Create(&user).Error
+
+	err = server.DB.Debug().Model(&models.User{}).Create(&user).Error
 	if err != nil {
 		return models.Post{}, err
 	}
+
 	post := models.Post{
-		Title:    "this is the title sam",
-		Content:  "this is the content sam",
+		Title:    "title",
+		Content:  "content",
 		AuthorID: user.ID,
 	}
-	err = server.DB.Model(&models.Post{}).Create(&post).Error
+
+	err = server.DB.Debug().Model(&models.Post{}).Create(&post).Error
 	if err != nil {
 		return models.Post{}, err
 	}
+
 	return post, nil
 }
 

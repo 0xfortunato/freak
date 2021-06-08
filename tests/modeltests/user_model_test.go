@@ -121,5 +121,5 @@ func TestDeleteAUser(t *testing.T) {
 		return
 	}
 
-	assert.Equal(t, isDeleted, int64(1))
+	assert.Equal(t, int(isDeleted), 1)
 }
