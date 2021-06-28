@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"gopkg.in/go-playground/assert.v1"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSignIn(t *testing.T) {
@@ -21,7 +21,7 @@ func TestSignIn(t *testing.T) {
 	}
 	user, err := seedOneUser()
 	if err != nil {
-		fmt.Printf("This is the error %v\n", err)
+		fmt.Printf("this is the error %v\n", err)
 	}
 
 	samples := []struct {
@@ -31,7 +31,7 @@ func TestSignIn(t *testing.T) {
 	}{
 		{
 			email:        user.Email,
-			password:     "password", //Note the password has to be this, not the hashed one from the database
+			password:     "password", // the password has to be this, not the hashed one from the database
 			errorMessage: "",
 		},
 		{
@@ -80,32 +80,32 @@ func TestLogin(t *testing.T) {
 		{
 			inputJSON:    `{"email": "pet@gmail.com", "password": "wrong password"}`,
 			statusCode:   422,
-			errorMessage: "Incorrect Password",
+			errorMessage: "incorrect password",
 		},
 		{
 			inputJSON:    `{"email": "frank@gmail.com", "password": "password"}`,
 			statusCode:   422,
-			errorMessage: "Incorrect Details",
+			errorMessage: "incorrect details",
 		},
 		{
 			inputJSON:    `{"email": "kangmail.com", "password": "password"}`,
 			statusCode:   422,
-			errorMessage: "Invalid Email",
+			errorMessage: "invalid email",
 		},
 		{
 			inputJSON:    `{"email": "", "password": "password"}`,
 			statusCode:   422,
-			errorMessage: "Required Email",
+			errorMessage: "required email",
 		},
 		{
 			inputJSON:    `{"email": "kan@gmail.com", "password": ""}`,
 			statusCode:   422,
-			errorMessage: "Required Password",
+			errorMessage: "required password",
 		},
 		{
 			inputJSON:    `{"email": "", "password": "password"}`,
 			statusCode:   422,
-			errorMessage: "Required Email",
+			errorMessage: "required email",
 		},
 	}
 
@@ -128,7 +128,7 @@ func TestLogin(t *testing.T) {
 			responseMap := make(map[string]interface{})
 			err = json.Unmarshal([]byte(rr.Body.String()), &responseMap)
 			if err != nil {
-				t.Errorf("Cannot convert to json: %v", err)
+				t.Errorf("cannot convert to json: %v", err)
 			}
 			assert.Equal(t, responseMap["error"], v.errorMessage)
 		}
