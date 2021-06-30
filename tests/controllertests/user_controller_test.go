@@ -173,3 +173,172 @@ func TestGetUserByID(t *testing.T) {
 		}
 	}
 }
+
+func TestUpdateUser(t *testing.T) {
+
+	var AuthEmail, AuthPassword string
+	var AuthID uint32
+
+	err := refreshUserTable()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	users, err := seedUsers()
+	if err != nil {
+		log.Fatalf("error seeding user: %v\n", err)
+	}
+
+	// get only first user
+	for _, user := range users {
+		if user.ID == 2 {
+			continue
+		}
+
+		AuthID = user.ID
+		AuthEmail = user.Email
+		AuthPassword = "password"
+	}
+
+	// log in the user and get thr auth token
+	token, err := server.SignIn(AuthEmail, AuthPassword)
+	if err != nil {
+		log.Fatalf("cannot login: %v\n", err)
+	}
+
+	tokenString := fmt.Sprintf("bearer %v", token)
+
+	samples := []struct {
+		id             string
+		updateJSON     string
+		statusCode     int
+		updateNickname string
+		updateEmail    string
+		tokenGiven     string
+		errorMessage   string
+	}{
+		{
+			// convert int32 to int first before converting to string
+			id:             strconv.Itoa(int(AuthID)),
+			updateJSON:     `{"nickname":"Grand", "email": "grand@gmail.com", "password": "password"}`,
+			statusCode:     200,
+			updateNickname: "Grand",
+			updateEmail:    "grand@gmail.com",
+			tokenGiven:     tokenString,
+			errorMessage:   "",
+		},
+		{
+			// When no token was passed
+			id:           strconv.Itoa(int(AuthID)),
+			updateJSON:   `{"nickname":"Man", "email": "man@gmail.com", "password": "password"}`,
+			statusCode:   401,
+			tokenGiven:   "",
+			errorMessage: "Unauthorized",
+		},
+		{
+			// When incorrect token was passed
+			id:           strconv.Itoa(int(AuthID)),
+			updateJSON:   `{"nickname":"Woman", "email": "woman@gmail.com", "password": "password"}`,
+			statusCode:   401,
+			tokenGiven:   "This is incorrect token",
+			errorMessage: "Unauthorized",
+		},
+		{
+			// Remember "kenny@gmail.com" belongs to user 2
+			id:           strconv.Itoa(int(AuthID)),
+			updateJSON:   `{"nickname":"Frank", "email": "kenny@gmail.com", "password": "password"}`,
+			statusCode:   500,
+			tokenGiven:   tokenString,
+			errorMessage: "Email Already Taken",
+		},
+		{
+			// Remember "Kenny Morris" belongs to user 2
+			id:           strconv.Itoa(int(AuthID)),
+			updateJSON:   `{"nickname":"Kenny Morris", "email": "grand@gmail.com", "password": "password"}`,
+			statusCode:   500,
+			tokenGiven:   tokenString,
+			errorMessage: "Nickname Already Taken",
+		},
+		{
+			id:           strconv.Itoa(int(AuthID)),
+			updateJSON:   `{"nickname":"Kan", "email": "kangmail.com", "password": "password"}`,
+			statusCode:   422,
+			tokenGiven:   tokenString,
+			errorMessage: "Invalid Email",
+		},
+		{
+			id:           strconv.Itoa(int(AuthID)),
+			updateJSON:   `{"nickname": "", "email": "kan@gmail.com", "password": "password"}`,
+			statusCode:   422,
+			tokenGiven:   tokenString,
+			errorMessage: "Required Nickname",
+		},
+		{
+			id:           strconv.Itoa(int(AuthID)),
+			updateJSON:   `{"nickname": "Kan", "email": "", "password": "password"}`,
+			statusCode:   422,
+			tokenGiven:   tokenString,
+			errorMessage: "Required Email",
+		},
+		{
+			id:         "unknwon",
+			tokenGiven: tokenString,
+			statusCode: 400,
+		},
+		{
+			// When user 2 is using user 1 token
+			id:           strconv.Itoa(int(2)),
+			updateJSON:   `{"nickname": "Mike", "email": "mike@gmail.com", "password": "password"}`,
+			tokenGiven:   tokenString,
+			statusCode:   401,
+			errorMessage: "Unauthorized",
+		},
+	}
+
+	for _, v := range samples {
+		req, err := http.NewRequest("POST", "/users", bytes.NewBufferString(v.updateJSON))
+		if err != nil {
+			t.Errorf("this is the error %v\n", err)
+		}
+
+		req = mux.SetURLVars(req, map[string]string{"id": v.id})
+
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(server.UpdateUser)
+
+		req.Header.Set("Authorization", v.tokenGiven)
+
+		handler.ServeHTTP(rr, req)
+
+		responseMap := make(map[string]interface{})
+		err = json.Unmarshal([]byte(rr.Body.String()), &responseMap)
+		if err != nil {
+			t.Errorf("cannot convert to json: %v\n", err)
+		}
+
+		assert.Equal(t, rr.Code, v.statusCode)
+		if v.statusCode == 200 {
+			assert.Equal(t, responseMap["nickname"], v.updateNickname)
+			assert.Equal(t, responseMap["email"], v.updateEmail)
+		}
+
+		if v.statusCode == 401 || v.statusCode == 422 || v.statusCode == 500 && v.errorMessage != "" {
+			assert.Equal(t, responseMap["error"], v.errorMessage)
+		}
+	}
+}
+
+func TestDeleteUser(t *testing.T) {
+
+	var AuthEmail, AuthPassword string
+	var AuthID uint32
+
+	err := refreshUserTable()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	users, err := seedUsers() //we need atleast two users to properly check the update
+	if err != nil {
+		log.Fatalf("Error seeding user: %v\n", err)
+	}
