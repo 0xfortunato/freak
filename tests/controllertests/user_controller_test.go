@@ -338,7 +338,91 @@ func TestDeleteUser(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	users, err := seedUsers() //we need atleast two users to properly check the update
+	users, err := seedUsers()
 	if err != nil {
-		log.Fatalf("Error seeding user: %v\n", err)
+		log.Fatalf("error seeding user: %v\n", err)
 	}
+
+	// Get only the first and log him in
+	for _, user := range users {
+		if user.ID == 2 {
+			continue
+		}
+		AuthID = user.ID
+		AuthEmail = user.Email
+		AuthPassword = "password"
+	}
+
+	// login the user and get the authentication token
+	token, err := server.SignIn(AuthEmail, AuthPassword)
+	if err != nil {
+		log.Fatalf("cannot login: %v\n", err)
+	}
+	tokenString := fmt.Sprintf("Bearer %v", token)
+
+	userSample := []struct {
+		id           string
+		tokenGiven   string
+		statusCode   int
+		errorMessage string
+	}{
+		{
+			// Convert int32 to int first before converting to string
+			id:           strconv.Itoa(int(AuthID)),
+			tokenGiven:   tokenString,
+			statusCode:   204,
+			errorMessage: "",
+		},
+		{
+			// When no token is given
+			id:           strconv.Itoa(int(AuthID)),
+			tokenGiven:   "",
+			statusCode:   401,
+			errorMessage: "Unauthorized",
+		},
+		{
+			// When incorrect token is given
+			id:           strconv.Itoa(int(AuthID)),
+			tokenGiven:   "This is an incorrect token",
+			statusCode:   401,
+			errorMessage: "Unauthorized",
+		},
+		{
+			id:         "unknwon",
+			tokenGiven: tokenString,
+			statusCode: 400,
+		},
+		{
+			// User 2 trying to use User 1 token
+			id:           strconv.Itoa(int(2)),
+			tokenGiven:   tokenString,
+			statusCode:   401,
+			errorMessage: "Unauthorized",
+		},
+	}
+
+	for _, v := range userSample {
+
+		req, err := http.NewRequest("GET", "/users", nil)
+		if err != nil {
+			t.Errorf("this is the error: %v\n", err)
+		}
+		req = mux.SetURLVars(req, map[string]string{"id": v.id})
+		rr := httptest.NewRecorder()
+		handler := http.HandlerFunc(server.DeleteUser)
+
+		req.Header.Set("Authorization", v.tokenGiven)
+
+		handler.ServeHTTP(rr, req)
+		assert.Equal(t, rr.Code, v.statusCode)
+
+		if v.statusCode == 401 && v.errorMessage != "" {
+			responseMap := make(map[string]interface{})
+			err = json.Unmarshal([]byte(rr.Body.String()), &responseMap)
+			if err != nil {
+				t.Errorf("cannot convert to json: %v", err)
+			}
+			assert.Equal(t, responseMap["error"], v.errorMessage)
+		}
+	}
+}
